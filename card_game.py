@@ -16,43 +16,50 @@ class CardGame(Game):
         return "Правила 21: 36 карт. Ціль — набрати 21 або більше ніж у дилера."
 
     def play(self, casino, bet: int) -> int:
+        io = casino.io
         deck = Deck(self._is_bj)
         p_hand = Hand("Гравець")
         d_hand = Hand("Дилер")
+
+        io.say(f"\n--- {self.name} ---")
+        io.say(self.get_rules())
 
         for _ in range(2):
             p_hand.add_card(deck.draw())
             d_hand.add_card(deck.draw())
 
-        print(f"\nВаші карти: {[c.show() for c in p_hand.cards]} | Сума: {p_hand.get_score()}")
+        io.say(f"\nВаші карти: {[c.show() for c in p_hand.cards]} | Сума: {p_hand.get_score()}")
 
-        if p_hand.get_score() <= 21 and input("1 - Добрати, 0 - Паси: ").strip() == "1":
+        if p_hand.get_score() <= 21 and io.ask("1 - Добрати, 0 - Паси: ").strip() == "1":
             p_hand.add_card(deck.draw())
+            io.say(f"Ваші карти: {[c.show() for c in p_hand.cards]} | Сума: {p_hand.get_score()}")
 
         p_score = p_hand.get_score()
         d_score = d_hand.get_score()
+        io.say(f"Карти дилера: {[c.show() for c in d_hand.cards]} | Сума: {d_score}")
 
         if p_score <= 21 and (d_score > 21 or p_score > d_score):
             win_amount = bet * 2
-            print(f"🎉 Виграш! +${win_amount}")
+            io.say(f"🎉 Виграш! +${win_amount}")
             return win_amount
         elif p_score <= 21 and p_score == d_score:
-            print("🤝 Нічия! Ставка повертається.")
+            io.say("🤝 Нічия! Ставка повертається.")
             return bet
         else:
-            print("❌ Програш.")
+            io.say("❌ Програш.")
             return 0
 
     def simulate(self, casino, bet: int, rounds: int) -> None:
+        io = casino.io
         wins, losses, draws = 0, 0, 0
         start_balance = casino.balance
         played_rounds = 0
 
-        print(f"\n... Запуск симуляції {rounds} ігор у '{self.name}' зі ставкою ${bet} ...")
+        io.say(f"\n... Запуск симуляції {rounds} ігор у '{self.name}' зі ставкою ${bet} ...")
 
         for _ in range(rounds):
             if casino.balance < bet:
-                print("💸 Баланс вичерпано під час симуляції!")
+                io.say("💸 Баланс вичерпано під час симуляції!")
                 break
 
             played_rounds += 1
@@ -71,10 +78,10 @@ class CardGame(Game):
                 losses += 1
 
         profit = casino.balance - start_balance
-        print("\n" + "=" * 30)
-        print("📊 РЕЗУЛЬТАТИ СИМУЛЯЦІЇ 📊")
-        print(f"Зіграно раундів: {played_rounds}")
-        print(f"Перемог: {wins} | Поразок: {losses} | Нічій: {draws}")
-        print(f"Підсумок: {'+' if profit >= 0 else ''}${profit}")
-        print(f"Новий баланс: ${casino.balance}")
-        print("=" * 30)
+        io.say("\n" + "=" * 30)
+        io.say("📊 РЕЗУЛЬТАТИ СИМУЛЯЦІЇ 📊")
+        io.say(f"Зіграно раундів: {played_rounds}")
+        io.say(f"Перемог: {wins} | Поразок: {losses} | Нічій: {draws}")
+        io.say(f"Підсумок: {'+' if profit >= 0 else ''}${profit}")
+        io.say(f"Новий баланс: ${casino.balance}")
+        io.say("=" * 30)

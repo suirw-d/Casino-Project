@@ -20,9 +20,10 @@ class RouletteGame(Game):
         )
 
     def play(self, casino, bet: int) -> int:
-        print(self.get_rules())
-        choice = input("Оберіть ставку (1 - Червоне, 2 - Чорне, 3 - Зеро): ").strip()
-        
+        io = casino.io
+        io.say(self.get_rules())
+        choice = io.ask("Оберіть ставку (1 - Червоне, 2 - Чорне, 3 - Зеро): ").strip()
+
         self._last_num = random.randint(0, 6)
         if self._last_num == 0:
             color = "Зеро (0)"
@@ -31,17 +32,17 @@ class RouletteGame(Game):
         else:
             color = "Чорне"
 
-        print(f"\n🎰 Кулька зупинилася на: {self._last_num} ({color})!")
+        io.say(f"\n🎰 Кулька зупинилася на: {self._last_num} ({color})!")
 
         if choice == "3" and self._last_num == 0:
-            print("💡 Вгадали Зеро! Множник x14.")
+            io.say("💡 Вгадали Зеро! Множник x14.")
             return bet * 14
         elif choice == "1" and self._last_num in self._colors["Червоне"]:
-            print("💡 Вгадали Червоне! Множник x2.")
+            io.say("💡 Вгадали Червоне! Множник x2.")
             return bet * 2
         elif choice == "2" and self._last_num in self._colors["Чорне"]:
-            print("💡 Вгадали Чорне! Множник x2.")
+            io.say("💡 Вгадали Чорне! Множник x2.")
             return bet * 2
 
-        print("💡 Колір або число не співпали.")
+        io.say("💡 Колір або число не співпали.")
         return 0
