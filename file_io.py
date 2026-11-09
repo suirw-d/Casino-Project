@@ -1,5 +1,7 @@
 import logging
 
+from interfaces import IInputSource, IOutputSink
+
 logger = logging.getLogger(__name__)
 
 
@@ -7,7 +9,7 @@ class InputExhaustedError(Exception):
     """Вхідний файл закінчився раніше, ніж програма отримала всі відповіді."""
 
 
-class FileInput:
+class FileInput(IInputSource):
     """Читає налаштування та відповіді гравця з текстового файлу.
 
     Формат файлу:
@@ -63,7 +65,7 @@ class FileInput:
         return value
 
 
-class FileWriter:
+class FileWriter(IOutputSink):
     """Записує результати гри у текстовий файл."""
 
     def __init__(self, path: str = "output.txt"):
@@ -87,7 +89,7 @@ class FileWriter:
         self.close()
 
 
-class ConsoleInput:
+class ConsoleInput(IInputSource):
     """Читає відповіді гравця прямо з консолі (режим --console)."""
 
     def read(self, prompt: str = "") -> str:
@@ -97,7 +99,7 @@ class ConsoleInput:
             raise InputExhaustedError("Введення з консолі завершено.") from None
 
 
-class ConsoleWriter:
+class ConsoleWriter(IOutputSink):
     """Виводить текст у консоль (режим --console)."""
 
     def write(self, text: str = "") -> None:
@@ -111,7 +113,11 @@ class GameIO:
     echo=False — не дублювати їх (консольний режим: запитання і так видно в консолі).
     """
 
-    def __init__(self, reader, writer, echo: bool = True):
+    def __init__(self, reader: IInputSource, writer: IOutputSink, echo: bool = True):
+        if not isinstance(reader, IInputSource):
+            raise TypeError(f"reader має реалізовувати IInputSource, отримано {type(reader).__name__}")
+        if not isinstance(writer, IOutputSink):
+            raise TypeError(f"writer має реалізовувати IOutputSink, отримано {type(writer).__name__}")
         self._reader = reader
         self._writer = writer
         self._echo = echo
