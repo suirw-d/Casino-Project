@@ -1,8 +1,8 @@
 import logging
+from typing import Dict
 
-from card_game import CardGame
 from file_io import GameIO, InputExhaustedError
-from roulette_game import RouletteGame
+from game import Game
 
 logger = logging.getLogger(__name__)
 
@@ -10,17 +10,14 @@ logger = logging.getLogger(__name__)
 class Casino:
     """Головний клас управління Казино."""
 
-    def __init__(self, game_io: GameIO, name: str = "ДОДЕПОВКА", initial_balance: int = 500):
+    def __init__(self, game_io: GameIO, games: Dict[str, Game],
+                 name: str = "ДОДЕПОВКА", initial_balance: int = 500):
         self._io = game_io
         self._name = name
         self._balance = initial_balance
         self._start_balance = initial_balance
         self._history = []
-        self._games = {
-            "21": CardGame("Гра 21", is_blackjack=False),
-            "bj": CardGame("Блекджек", is_blackjack=True),
-            "roulette": RouletteGame(),
-        }
+        self._games = games
         logger.info("Казино '%s' створено. Початковий баланс: $%s. Ігор: %s",
                     self._name, self._balance, list(self._games))
 
@@ -85,10 +82,15 @@ class Casino:
                     logger.warning("Спроба зіграти з нульовим балансом")
                     continue
 
+                game_key = "21" if choice == "1" else ("bj" if choice == "2" else "roulette")
+                if game_key not in self._games:
+                    self._io.say("⚠️ Ця гра недоступна.")
+                    logger.warning("Гру '%s' не передано в казино", game_key)
+                    continue
+
                 bet = self.get_bet()
                 self.deduct_balance(bet)
 
-                game_key = "21" if choice == "1" else ("bj" if choice == "2" else "roulette")
                 logger.info("Початок гри '%s', ставка $%s", game_key, bet)
                 try:
                     payout = self._games[game_key].play(self, bet)
@@ -105,6 +107,13 @@ class Casino:
                     self._io.say("💸 Немає коштів для симуляції!")
                     logger.warning("Спроба симуляції з нульовим балансом")
                     continue
+
+                game = self._games.get("21")
+                if game is None:
+                    self._io.say("⚠️ Симуляція недоступна.")
+                    logger.warning("Гру '21' не передано в казино")
+                    continue
+
                 bet = self.get_bet()
                 try:
                     rounds = int(self._io.ask("Скільки ігор симулювати?: "))
@@ -114,7 +123,7 @@ class Casino:
                     logger.warning("Некоректна кількість ігор. Використано значення за замовчуванням: %s", rounds)
                 logger.info("Запуск симуляції: ставка $%s, ігор: %s", bet, rounds)
                 try:
-                    self._games["21"].simulate(self, bet, rounds)
+                    game.simulate(self, bet, rounds)
                 except Exception:
                     logger.exception("Помилка під час симуляції")
                     raise

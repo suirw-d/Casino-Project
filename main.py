@@ -5,8 +5,11 @@ import os
 import random
 import sys
 
+from card_game import CardGame
 from casino import Casino
+from deck import Deck
 from file_io import ConsoleInput, ConsoleWriter, FileInput, FileWriter, GameIO
+from roulette_game import RouletteGame
 
 # Папка з main.py: файли шукаємо поруч із програмою, а не в папці, з якої запущено термінал
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -41,6 +44,18 @@ def read_int_setting(settings: dict, key: str, default: int) -> int:
         return default
 
 
+def build_games(rng: random.Random) -> dict:
+    """Створює ігри казино. Єдиний генератор випадкових чисел передається в усі ігри."""
+    def deck_factory(is_blackjack: bool) -> Deck:
+        return Deck(is_blackjack, rng)
+
+    return {
+        "21": CardGame("Гра 21", is_blackjack=False, deck_factory=deck_factory),
+        "bj": CardGame("Блекджек", is_blackjack=True, deck_factory=deck_factory),
+        "roulette": RouletteGame(rng),
+    }
+
+
 def run(input_path: str, output_path: str) -> int:
     """Запускає казино: відповіді беруться з input_path, результати пишуться в output_path."""
     try:
@@ -52,12 +67,15 @@ def run(input_path: str, output_path: str) -> int:
 
     settings = reader.settings
     if "seed" in settings:
-        random.seed(settings["seed"])
+        rng = random.Random(settings["seed"])
         logger.info("Встановлено seed=%s", settings["seed"])
+    else:
+        rng = random.Random()
 
     with FileWriter(output_path) as writer:
         casino = Casino(
             GameIO(reader, writer),
+            build_games(rng),
             name=settings.get("name", DEFAULT_NAME),
             initial_balance=read_int_setting(settings, "balance", DEFAULT_BALANCE),
         )
@@ -72,6 +90,7 @@ def run_console() -> int:
     logger.info("Запуск у консольному режимі")
     casino = Casino(
         GameIO(ConsoleInput(), ConsoleWriter(), echo=False),
+        build_games(random.Random()),
         name=DEFAULT_NAME,
         initial_balance=DEFAULT_BALANCE,
     )

@@ -1,3 +1,5 @@
+from typing import Callable
+
 from deck import Deck
 from game import Game
 from hand import Hand
@@ -6,9 +8,11 @@ from hand import Hand
 class CardGame(Game):
     """Клас карткових ігор, що успадковує Game."""
 
-    def __init__(self, name: str, is_blackjack: bool = True):
+    def __init__(self, name: str, is_blackjack: bool = True,
+                 deck_factory: Callable[[bool], Deck] = Deck):
         super().__init__(name)
         self._is_bj = is_blackjack
+        self._deck_factory = deck_factory
 
     def get_rules(self) -> str:
         if self._is_bj:
@@ -17,7 +21,7 @@ class CardGame(Game):
 
     def play(self, casino, bet: int) -> int:
         io = casino.io
-        deck = Deck(self._is_bj)
+        deck = self._deck_factory(self._is_bj)
         p_hand = Hand("Гравець")
         d_hand = Hand("Дилер")
 
@@ -64,7 +68,7 @@ class CardGame(Game):
 
             played_rounds += 1
             casino.deduct_balance(bet)
-            deck = Deck(is_blackjack=self._is_bj)
+            deck = self._deck_factory(self._is_bj)
             p_score = deck.draw().get_value() + deck.draw().get_value()
             d_score = deck.draw().get_value() + deck.draw().get_value()
 

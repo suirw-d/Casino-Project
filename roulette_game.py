@@ -1,4 +1,5 @@
 import random
+from typing import Optional
 
 from game import Game
 
@@ -6,8 +7,9 @@ from game import Game
 class RouletteGame(Game):
     """Клас Рулетки, що успадковує Game."""
 
-    def __init__(self):
+    def __init__(self, rng: Optional[random.Random] = None):
         super().__init__("Рулетка")
+        self._rng = rng if rng is not None else random.Random()
         self._colors = {"Червоне": [1, 3, 5], "Чорне": [2, 4, 6]}
         self._last_num = 0
 
@@ -24,7 +26,7 @@ class RouletteGame(Game):
         io.say(self.get_rules())
         choice = io.ask("Оберіть ставку (1 - Червоне, 2 - Чорне, 3 - Зеро): ").strip()
 
-        self._last_num = random.randint(0, 6)
+        self._last_num = self._rng.randint(0, 6)
         if self._last_num == 0:
             color = "Зеро (0)"
         elif self._last_num in self._colors["Червоне"]:
