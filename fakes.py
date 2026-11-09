@@ -2,9 +2,10 @@
 from card import Card
 from file_io import GameIO, InputExhaustedError
 from game import Game
+from interfaces import IInputSource, IOutputSink
 
 
-class ListReader:
+class ListReader(IInputSource):
     """Віддає заздалегідь підготовлені відповіді гравця по черзі."""
 
     def __init__(self, answers):
@@ -16,7 +17,7 @@ class ListReader:
         return self._answers.pop(0)
 
 
-class ListWriter:
+class ListWriter(IOutputSink):
     """Збирає все, що гра «виводить», у список рядків."""
 
     def __init__(self):
